@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>포켓몬 쌓기</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포켓몬 쌓기</title>
 <style>
   :root {
     --accent: #FFD700;
@@ -246,6 +247,23 @@
 <div id="hint">CLICK / SPACE to drop</div>
 
 <script>
+const supabaseUrl = "https://fxgkzcvnsipfgdjpinwr.supabase.co";
+const supabaseKey = "sb_publishable_hL7RFbs2qkWCfAfwIvdIxw_70-Y5chC";
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+async function saveScore(nickname, score) {
+  const { error } = await supabase
+    .from("scores")
+    .insert({
+      nickname: nickname,
+      score: score
+    });
+
+  if (error) {
+    console.error("점수 저장 실패:", error);
+  } else {
+    console.log("점수 저장 성공");
+  }
+}
 // ── CANVAS SETUP ─────────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
@@ -613,9 +631,18 @@ function landBlock() {
   // ── 전체 COM 안정성 체크 ───────────────────────────────
   if (getInstability() >= 1) triggerGameOver();
 }
-
+let scoreSaved = false;
 function triggerGameOver() {
+  if (scoreSaved) return;
+  scoreSaved = true;
+
   state = 'toppling';
+
+  const nickname = prompt("닉네임을 입력해주세요");
+  if (nickname) {
+    saveScore(nickname, score);
+  }
+
   const com = getCOM();
   const dir = com > BASE_CX ? 1 : -1;
   topple = { angle: 0, angleV: dir * 0.015, pivotX: BASE_CX, pivotY: GROUND_Y + camY };
