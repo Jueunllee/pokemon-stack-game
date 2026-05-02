@@ -216,19 +216,19 @@
     <p>쌓을 포켓몬을 선택해요</p>
     <div class="choose-grid">
       <button class="mon-card" onclick="choosePokemon('pikachu')">
-        <img src="pikachu.png" alt="피카츄">
+        <img src="pikachu.png" alt="피카츄" data-mon="pikachu">
         피카츄
       </button>
       <button class="mon-card" onclick="choosePokemon('wooper')">
-        <img src="wooper.jpg" alt="우파">
+        <img src="wooper.jpg" alt="우파" data-mon="wooper">
         우파
       </button>
       <button class="mon-card" onclick="choosePokemon('eevee')">
-        <img src="eevee.jpg" alt="이브이">
+        <img src="eevee.jpg" alt="이브이" data-mon="eevee">
         이브이
       </button>
       <button class="mon-card" onclick="choosePokemon('doduo')">
-        <img src="doduo.webp" alt="두두">
+        <img src="doduo.webp" alt="두두" data-mon="doduo">
         두두
       </button>
     </div>
@@ -308,7 +308,10 @@ function removeBg(img) {
 }
 function loadMon(key) {
   const rawImg = new Image();
-  rawImg.onload = () => { monSrcs[key] = removeBg(rawImg); };
+  rawImg.onload = () => {
+    monSrcs[key] = removeBg(rawImg);
+    updateChoiceImages();
+  };
   rawImg.onerror = () => {};
   rawImg.src = POKEMON[key].src;
 
@@ -320,6 +323,13 @@ function loadMon(key) {
   }
 }
 Object.keys(POKEMON).forEach(loadMon);
+
+function updateChoiceImages() {
+  document.querySelectorAll('.mon-card img[data-mon]').forEach(img => {
+    const key = img.dataset.mon;
+    if (monSrcs[key]) img.src = monSrcs[key].toDataURL('image/png');
+  });
+}
 
 function drawMonAt(cx, cy, alpha=1, scaleX=1, scaleY=1, shiny=false) {
   ctx.save();
@@ -415,23 +425,24 @@ function showSelect() {
     <p>쌓을 포켓몬을 선택해요</p>
     <div class="choose-grid">
       <button class="mon-card" onclick="choosePokemon('pikachu')">
-        <img src="pikachu.png" alt="피카츄">
+        <img src="pikachu.png" alt="피카츄" data-mon="pikachu">
         피카츄
       </button>
       <button class="mon-card" onclick="choosePokemon('wooper')">
-        <img src="wooper.jpg" alt="우파">
+        <img src="wooper.jpg" alt="우파" data-mon="wooper">
         우파
       </button>
       <button class="mon-card" onclick="choosePokemon('eevee')">
-        <img src="eevee.jpg" alt="이브이">
+        <img src="eevee.jpg" alt="이브이" data-mon="eevee">
         이브이
       </button>
       <button class="mon-card" onclick="choosePokemon('doduo')">
-        <img src="doduo.webp" alt="두두">
+        <img src="doduo.webp" alt="두두" data-mon="doduo">
         두두
       </button>
     </div>
   `;
+  updateChoiceImages();
 }
 
 function showReady() {
