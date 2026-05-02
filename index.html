@@ -65,8 +65,8 @@
   .new-record { color: var(--accent); font-size: 13px; letter-spacing: 3px; line-height: 1.2; text-align: center; margin: 0; animation: blink 0.8s step-end infinite; }
   .choose-grid {
     display: grid;
-    grid-template-columns: repeat(2, 112px);
-    gap: 12px;
+    grid-template-columns: repeat(3, 88px);
+    gap: 10px;
     margin: 8px 0 4px;
   }
   .mon-card {
@@ -79,7 +79,7 @@
     font-size: 13px;
     font-weight: bold;
     letter-spacing: 2px;
-    padding: 10px 8px;
+    padding: 8px 6px;
     text-align: center;
   }
   .mon-card:hover {
@@ -89,8 +89,8 @@
   }
   .mon-card img {
     display: block;
-    width: 68px;
-    height: 68px;
+    width: 60px;
+    height: 60px;
     object-fit: contain;
     image-rendering: pixelated;
     margin: 0 auto 8px;
@@ -236,6 +236,10 @@
         <img src="doduo.webp" alt="두두" data-mon="doduo">
         두두
       </button>
+      <button class="mon-card" onclick="choosePokemon('pachirisu')">
+        <img src="pachirisu.jpg" alt="파치리스" data-mon="pachirisu">
+        파치리스
+      </button>
     </div>
   </div>
 </div>
@@ -293,6 +297,7 @@ const POKEMON = {
   wooper:  { name: '우파', title: '우파 쌓기', src: 'wooper.jpg', evolvedSrc: 'quagsire.webp', suffix: '우파', bestKey: 'wooperBest', overTitle: '분발하라파!!', retryText: '다시하겠파!', stackGap: 42, evolveAt: 10, accent: '#48C8FF', shadow: '#116A9C', glow: 'rgba(72,200,255,0.2)' },
   eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', evolvedSrc: 'jolteon.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50, evolveAt: 10, accent: '#B66A2A', shadow: '#5A2B12', glow: 'rgba(182,106,42,0.22)' },
   doduo:   { name: '두두', title: '두두 쌓기', src: 'doduo.webp', shinySrc: 'doduo-shiny.webp', suffix: '두두', bestKey: 'doduoBest', overTitle: '무너졌두 ㅠ.ㅠ', retryText: '다시하겠두!', stackGap: 46, shinyChance: 0.18, shinyValue: 5, shinySpeed: 1.8, accent: '#E8D7A8', shadow: '#8B7650', glow: 'rgba(232,215,168,0.2)' },
+  pachirisu: { name: '파치리스', title: '파치리스 쌓기', src: 'pachirisu.jpg', suffix: '리스', bestKey: 'pachirisuBest', overTitle: '무너졌리스 ㅠ.ㅠ', retryText: '다시하겠리스!', stackGap: 56, accent: '#7DE1FF', shadow: '#1F7EA0', glow: 'rgba(125,225,255,0.22)' },
 };
 let selectedKey = 'pikachu';
 let selectedMon = POKEMON[selectedKey];
@@ -493,6 +498,10 @@ function showSelect() {
       <button class="mon-card" onclick="choosePokemon('doduo')">
         <img src="doduo.webp" alt="두두" data-mon="doduo">
         두두
+      </button>
+      <button class="mon-card" onclick="choosePokemon('pachirisu')">
+        <img src="pachirisu.jpg" alt="파치리스" data-mon="pachirisu">
+        파치리스
       </button>
     </div>
   `;
