@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>포켓몬 쌓기</title>
 <style>
+  :root {
+    --accent: #FFD700;
+    --shadow: #8B4513;
+    --glow: rgba(255,215,0,0.15);
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     background: #1a0030;
@@ -17,20 +22,20 @@
     user-select: none;
   }
   #title {
-    color: #FFD700;
+    color: var(--accent);
     font-size: 20px;
     letter-spacing: 5px;
-    text-shadow: 3px 3px 0 #8B4513;
+    text-shadow: 3px 3px 0 var(--shadow);
     margin-bottom: 10px;
     font-weight: bold;
   }
   #ui { display: flex; gap: 24px; margin-bottom: 10px; }
   .pixel-box {
     background: #0a0018;
-    border: 3px solid #FFD700;
-    box-shadow: 3px 3px 0 #8B4513;
+    border: 3px solid var(--accent);
+    box-shadow: 3px 3px 0 var(--shadow);
     padding: 5px 18px;
-    color: #FFD700;
+    color: var(--accent);
     font-size: 12px;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -40,8 +45,8 @@
   .pixel-box span { color: #fff; font-size: 22px; display: block; font-weight: bold; margin-top: 2px; }
   #canvas-wrap {
     position: relative;
-    border: 4px solid #FFD700;
-    box-shadow: 6px 6px 0 #8B4513, 0 0 40px rgba(255,215,0,0.15);
+    border: 4px solid var(--accent);
+    box-shadow: 6px 6px 0 var(--shadow), 0 0 40px var(--glow);
     line-height: 0;
   }
   canvas { display: block; image-rendering: pixelated; cursor: pointer; }
@@ -50,14 +55,14 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     background: rgba(5,0,20,0.88);
-    color: #FFD700;
+    color: var(--accent);
     font-family: 'Courier New', monospace;
     gap: 10px;
   }
-  #overlay h2 { font-size: 26px; letter-spacing: 3px; text-shadow: 3px 3px 0 #8B4513; line-height: 1.2; text-align: center; margin: 0; }
+  #overlay h2 { font-size: 26px; letter-spacing: 3px; text-shadow: 3px 3px 0 var(--shadow); line-height: 1.2; text-align: center; margin: 0; }
   #overlay p { font-size: 12px; color: #aaa; letter-spacing: 2px; line-height: 1.2; text-align: center; margin: 0; }
   .score-big { font-size: 36px; color: #fff; font-weight: bold; letter-spacing: 2px; line-height: 1.2; text-align: center; margin: 0; }
-  .new-record { color: #FFD700; font-size: 13px; letter-spacing: 3px; line-height: 1.2; text-align: center; margin: 0; animation: blink 0.8s step-end infinite; }
+  .new-record { color: var(--accent); font-size: 13px; letter-spacing: 3px; line-height: 1.2; text-align: center; margin: 0; animation: blink 0.8s step-end infinite; }
   .choose-grid {
     display: grid;
     grid-template-columns: repeat(2, 112px);
@@ -66,9 +71,9 @@
   }
   .mon-card {
     background: #0a0018;
-    border: 3px solid #FFD700;
-    box-shadow: 4px 4px 0 #8B4513;
-    color: #FFD700;
+    border: 3px solid var(--accent);
+    box-shadow: 4px 4px 0 var(--shadow);
+    color: var(--accent);
     cursor: pointer;
     font-family: 'Courier New', monospace;
     font-size: 13px;
@@ -80,7 +85,7 @@
   .mon-card:hover {
     background: #201040;
     transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0 #8B4513;
+    box-shadow: 5px 5px 0 var(--shadow);
   }
   .mon-card img {
     display: block;
@@ -129,7 +134,7 @@
     top: 0;
     width: 24px;
     height: 54px;
-    background: #FFD700;
+    background: var(--accent);
     border: 4px solid #202020;
     border-bottom: 0;
     transform-origin: bottom center;
@@ -143,7 +148,7 @@
     bottom: 0;
     width: 76px;
     height: 58px;
-    background: #FFD700;
+    background: var(--accent);
     border: 4px solid #202020;
     border-radius: 28px 28px 24px 24px;
     box-shadow: inset -8px -6px 0 #F0C000, 4px 4px 0 rgba(0,0,0,0.25);
@@ -193,13 +198,13 @@
   @keyframes tearDrop { 50% { transform: translateY(5px); } }
   @keyframes blink { 50% { opacity: 0; } }
   #btn, .pixel-btn {
-    background: #FFD700; color: #1a0030; border: none;
+    background: var(--accent); color: #1a0030; border: none;
     padding: 10px 30px; font-family: 'Courier New', monospace;
     font-size: 14px; letter-spacing: 3px; cursor: pointer;
-    box-shadow: 3px 3px 0 #8B4513; font-weight: bold; margin-top: 6px;
+    box-shadow: 3px 3px 0 var(--shadow); font-weight: bold; margin-top: 6px;
   }
-  #btn:hover, .pixel-btn:hover { background: #fff; transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #8B4513; }
-  #btn:active, .pixel-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #8B4513; }
+  #btn:hover, .pixel-btn:hover { background: #fff; transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--shadow); }
+  #btn:active, .pixel-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--shadow); }
   #hint { margin-top: 8px; color: #444; font-size: 10px; letter-spacing: 3px; }
 </style>
 </head>
@@ -284,10 +289,10 @@ for (let r=0;r<SROWS;r++) for (let c=0;c<SCOLS;c++) {
 
 // Load pokemon images with white-bg removal
 const POKEMON = {
-  pikachu: { name: '피카츄', title: '피카츄 쌓기', src: 'pikachu.png', suffix: '카츄', bestKey: 'pb2', overTitle: '무너졌츄!', retryText: '다시하겠츄!', stackGap: 80 },
-  wooper:  { name: '우파', title: '우파 쌓기', src: 'wooper.jpg', evolvedSrc: 'quagsire.webp', suffix: '우파', bestKey: 'wooperBest', overTitle: '무너졌파 ㅠ.ㅠ', retryText: '다시하겠파!', stackGap: 42, evolveAt: 10 },
-  eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', evolvedSrc: 'jolteon.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50, evolveAt: 10 },
-  doduo:   { name: '두두', title: '두두 쌓기', src: 'doduo.webp', shinySrc: 'doduo-shiny.webp', suffix: '두두', bestKey: 'doduoBest', overTitle: '무너졌두 ㅠ.ㅠ', retryText: '다시하겠두!', stackGap: 46, shinyChance: 0.18, shinyValue: 5, shinySpeed: 1.8 },
+  pikachu: { name: '피카츄', title: '피카츄 쌓기', src: 'pikachu.png', suffix: '카츄', bestKey: 'pb2', overTitle: '무너졌츄!', retryText: '다시하겠츄!', stackGap: 80, accent: '#FFD700', shadow: '#8B4513', glow: 'rgba(255,215,0,0.15)' },
+  wooper:  { name: '우파', title: '우파 쌓기', src: 'wooper.jpg', evolvedSrc: 'quagsire.webp', suffix: '우파', bestKey: 'wooperBest', overTitle: '무너졌파 ㅠ.ㅠ', retryText: '다시하겠파!', stackGap: 42, evolveAt: 10, accent: '#48C8FF', shadow: '#116A9C', glow: 'rgba(72,200,255,0.2)' },
+  eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', evolvedSrc: 'jolteon.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50, evolveAt: 10, accent: '#B66A2A', shadow: '#5A2B12', glow: 'rgba(182,106,42,0.22)' },
+  doduo:   { name: '두두', title: '두두 쌓기', src: 'doduo.webp', shinySrc: 'doduo-shiny.webp', suffix: '두두', bestKey: 'doduoBest', overTitle: '무너졌두 ㅠ.ㅠ', retryText: '다시하겠두!', stackGap: 46, shinyChance: 0.18, shinyValue: 5, shinySpeed: 1.8, accent: '#E8D7A8', shadow: '#8B7650', glow: 'rgba(232,215,168,0.2)' },
 };
 let selectedKey = 'pikachu';
 let selectedMon = POKEMON[selectedKey];
@@ -423,9 +428,18 @@ function prepareNextPiece() {
 function syncPokemonLabels() {
   selectedMon = POKEMON[selectedKey];
   best = +localStorage.getItem(selectedMon.bestKey)||0;
+  document.documentElement.style.setProperty('--accent', selectedMon.accent);
+  document.documentElement.style.setProperty('--shadow', selectedMon.shadow);
+  document.documentElement.style.setProperty('--glow', selectedMon.glow);
   document.title = selectedMon.title;
   document.getElementById('title').textContent = `★ ${selectedMon.title} ★`;
   document.getElementById('best').textContent = best;
+}
+
+function applyDefaultTheme() {
+  document.documentElement.style.setProperty('--accent', POKEMON.pikachu.accent);
+  document.documentElement.style.setProperty('--shadow', POKEMON.pikachu.shadow);
+  document.documentElement.style.setProperty('--glow', POKEMON.pikachu.glow);
 }
 
 function choosePokemon(key) {
@@ -439,7 +453,9 @@ function showSelect() {
   state = 'idle';
   cancelAnimationFrame(raf);
   document.getElementById('score').textContent = 0;
-  syncPokemonLabels();
+  applyDefaultTheme();
+  document.title = '포켓몬 쌓기';
+  document.getElementById('title').textContent = '★ 포켓몬 쌓기 ★';
   const ov = document.getElementById('overlay');
   ov.style.display = 'flex';
   ov.innerHTML = `
@@ -622,9 +638,9 @@ function render() {
   if (gY < H + 20) { // only draw if ground is still visible
     ctx.fillStyle = '#8B4513'; ctx.fillRect(0, gY, W, H - gY + 60);
     ctx.fillStyle = '#A0522D'; ctx.fillRect(0, gY, W, 6);
-    ctx.fillStyle = '#FFD700'; ctx.fillRect(0, gY, W, 3);
+    ctx.fillStyle = selectedMon.accent; ctx.fillRect(0, gY, W, 3);
     // Base platform
-    ctx.fillStyle = '#FFD700';
+    ctx.fillStyle = selectedMon.accent;
     ctx.fillRect(BASE_CX - PLATFORM_W/2, gY, PLATFORM_W, 8);
     ctx.fillStyle = '#8B4513';
     ctx.fillRect(BASE_CX - PLATFORM_W/2, gY+5, PLATFORM_W, 3);
@@ -736,7 +752,7 @@ function drawBars() {
   const bx = W - 18, by = 30, bh = H - 60;
   ctx.fillStyle = '#0a0018';
   ctx.fillRect(bx, by, 12, bh);
-  ctx.strokeStyle = '#FFD700'; ctx.lineWidth=2;
+  ctx.strokeStyle = selectedMon.accent; ctx.lineWidth=2;
   ctx.strokeRect(bx, by, 12, bh);
 
   // Instability fill (bottom up, red=bad)
@@ -744,7 +760,7 @@ function drawBars() {
   const heightPct = tower.length ? Math.min(tower.length/20, 1) : 0;
   // height (gold)
   const fh = bh * heightPct;
-  const instColor = inst > 0.7 ? `rgb(255,${Math.round(80-80*inst)},0)` : inst > 0.4 ? '#FF8C00' : '#FFD700';
+  const instColor = inst > 0.7 ? `rgb(255,${Math.round(80-80*inst)},0)` : inst > 0.4 ? '#FF8C00' : selectedMon.accent;
   ctx.fillStyle = instColor;
   ctx.fillRect(bx+2, by+bh-fh, 8, fh);
 
@@ -754,7 +770,7 @@ function drawBars() {
     ctx.fillRect(bx+2, by+bh-fh, 8, fh);
   }
 
-  ctx.fillStyle = '#FFD700'; ctx.font='7px Courier New'; ctx.textAlign='center';
+  ctx.fillStyle = selectedMon.accent; ctx.font='7px Courier New'; ctx.textAlign='center';
   ctx.fillText('↑', bx+6, by-4);
 
   // Left side: balance indicator (horizontal arrow showing COM lean)
@@ -766,10 +782,10 @@ function drawBars() {
     const bLeft = 14, bTop = H - 44;
     ctx.fillStyle = '#0a0018';
     ctx.fillRect(bLeft, bTop, barW, barH);
-    ctx.strokeStyle = '#FFD700'; ctx.lineWidth=1.5;
+    ctx.strokeStyle = selectedMon.accent; ctx.lineWidth=1.5;
     ctx.strokeRect(bLeft, bTop, barW, barH);
     // center line
-    ctx.fillStyle = '#FFD700'; ctx.fillRect(bLeft+barW/2-1, bTop, 2, barH);
+    ctx.fillStyle = selectedMon.accent; ctx.fillRect(bLeft+barW/2-1, bTop, 2, barH);
     // needle
     const needleX = bLeft + barW/2 + pct*(barW/2);
     const needleColor = Math.abs(pct) > 0.7 ? '#FF3333' : Math.abs(pct) > 0.4 ? '#FF8C00' : '#00FF88';
