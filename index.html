@@ -371,7 +371,6 @@ let tower  = [];           // [{cx}] settled blocks; index 0 = bottom
 let falling = null;        // {cx, cy, vy} – block currently dropping
 let carrier = { cx: W/4, dir: 1, speed: 3 };
 let currentPiece = { shiny: false, value: 1, speedBoost: 1 };
-let evolvedThisRun = false;
 let camY   = 0;
 let score  = 0;
 let best   = +localStorage.getItem(selectedMon.bestKey)||0;
@@ -397,6 +396,18 @@ function getInstability() {
   if (tower.length < 2) return 0;
   const off = Math.abs(getCOM() - BASE_CX);
   return Math.min(off / MAX_OFFSET, 1);
+}
+
+function evolveRecentStackIfReady() {
+  if (!selectedMon.evolvedSrc || !selectedMon.evolveAt) return;
+  const start = tower.length - selectedMon.evolveAt;
+  if (start < 0) return;
+
+  const group = tower.slice(start);
+  if (group.some(block => block.variant === 'evolved')) return;
+
+  const evolvedCx = group.reduce((sum, block) => sum + block.cx, 0) / group.length;
+  tower.splice(start, selectedMon.evolveAt, { cx: evolvedCx, variant: 'evolved' });
 }
 
 // ── GAME CONTROL ─────────────────────────────────────────────────
@@ -473,7 +484,6 @@ function startGame() {
   prepareNextPiece();
   document.getElementById('overlay').style.display = 'none';
   tower = []; falling = null; topple = null;
-  evolvedThisRun = false;
   score = 0; camY = 0;
   carrier.cx = W/2; carrier.dir = 1; carrier.speed = 3;
   document.getElementById('score').textContent = 0;
@@ -513,11 +523,7 @@ function landBlock() {
   score += landedPiece.value;
   document.getElementById('score').textContent = score;
 
-  if (!evolvedThisRun && selectedMon.evolvedSrc && tower.length >= selectedMon.evolveAt) {
-    tower = [{ cx: BASE_CX, variant: 'evolved' }];
-    camY = 0;
-    evolvedThisRun = true;
-  }
+  evolveRecentStackIfReady();
 
   // ── 카메라 스크롤 ──────────────────────────────────────
   const topCY = blockCY(tower.length - 1);
