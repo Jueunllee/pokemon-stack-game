@@ -286,7 +286,7 @@ for (let r=0;r<SROWS;r++) for (let c=0;c<SCOLS;c++) {
 const POKEMON = {
   pikachu: { name: '피카츄', title: '피카츄 쌓기', src: 'pikachu.png', suffix: '카츄', bestKey: 'pb2', overTitle: '무너졌츄!', retryText: '다시하겠츄!', stackGap: 80 },
   wooper:  { name: '우파', title: '우파 쌓기', src: 'wooper.jpg', suffix: '우파', bestKey: 'wooperBest', overTitle: '무너졌파 ㅠ.ㅠ', retryText: '다시하겠파!', stackGap: 42 },
-  eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50 },
+  eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', evolvedSrc: 'jolteon.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50, evolveAt: 10 },
   doduo:   { name: '두두', title: '두두 쌓기', src: 'doduo.webp', shinySrc: 'doduo-shiny.webp', suffix: '두두', bestKey: 'doduoBest', overTitle: '무너졌두 ㅠ.ㅠ', retryText: '다시하겠두!', stackGap: 46, shinyChance: 0.18, shinyValue: 5, shinySpeed: 1.8 },
 };
 let selectedKey = 'pikachu';
@@ -321,6 +321,12 @@ function loadMon(key) {
     shinyImg.onerror = () => {};
     shinyImg.src = POKEMON[key].shinySrc;
   }
+  if (POKEMON[key].evolvedSrc) {
+    const evolvedImg = new Image();
+    evolvedImg.onload = () => { monSrcs[`${key}:evolved`] = removeBg(evolvedImg); };
+    evolvedImg.onerror = () => {};
+    evolvedImg.src = POKEMON[key].evolvedSrc;
+  }
 }
 Object.keys(POKEMON).forEach(loadMon);
 
@@ -331,13 +337,17 @@ function updateChoiceImages() {
   });
 }
 
-function drawMonAt(cx, cy, alpha=1, scaleX=1, scaleY=1, shiny=false) {
+function drawMonAt(cx, cy, alpha=1, scaleX=1, scaleY=1, variant='normal') {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(cx, cy);
   ctx.scale(scaleX, scaleY);
   const x = -PIK_W/2, y = -PIK_H/2;
-  const selectedSrc = shiny ? (monSrcs[`${selectedKey}:shiny`] || monSrcs[selectedKey]) : monSrcs[selectedKey];
+  const selectedSrc = variant === 'evolved'
+    ? (monSrcs[`${selectedKey}:evolved`] || monSrcs[selectedKey])
+    : variant === 'shiny'
+      ? (monSrcs[`${selectedKey}:shiny`] || monSrcs[selectedKey])
+      : monSrcs[selectedKey];
   if (selectedSrc) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(selectedSrc, x, y, PIK_W, PIK_H);
@@ -361,6 +371,7 @@ let tower  = [];           // [{cx}] settled blocks; index 0 = bottom
 let falling = null;        // {cx, cy, vy} – block currently dropping
 let carrier = { cx: W/4, dir: 1, speed: 3 };
 let currentPiece = { shiny: false, value: 1, speedBoost: 1 };
+let evolvedThisRun = false;
 let camY   = 0;
 let score  = 0;
 let best   = +localStorage.getItem(selectedMon.bestKey)||0;
@@ -462,6 +473,7 @@ function startGame() {
   prepareNextPiece();
   document.getElementById('overlay').style.display = 'none';
   tower = []; falling = null; topple = null;
+  evolvedThisRun = false;
   score = 0; camY = 0;
   carrier.cx = W/2; carrier.dir = 1; carrier.speed = 3;
   document.getElementById('score').textContent = 0;
@@ -500,6 +512,12 @@ function landBlock() {
 
   score += landedPiece.value;
   document.getElementById('score').textContent = score;
+
+  if (!evolvedThisRun && selectedMon.evolvedSrc && tower.length >= selectedMon.evolveAt) {
+    tower = [{ cx: BASE_CX, variant: 'evolved' }];
+    camY = 0;
+    evolvedThisRun = true;
+  }
 
   // ── 카메라 스크롤 ──────────────────────────────────────
   const topCY = blockCY(tower.length - 1);
@@ -620,14 +638,14 @@ function render() {
     const cy = blockCY(i);
     if (cy > H + PIK_H || cy < -PIK_H*2) continue;
     const alpha = isToppling ? Math.max(0, 1 - Math.abs(topple.angle)*2) : 1;
-    drawMonAt(b.cx, cy, alpha, 1, 1, b.shiny);
+    drawMonAt(b.cx, cy, alpha, 1, 1, b.variant || (b.shiny ? 'shiny' : 'normal'));
   }
 
   if (isToppling) ctx.restore();
 
   // Falling pokemon
   if (falling) {
-    drawMonAt(falling.cx, falling.cy, 0.92, 1, 1, falling.shiny);
+    drawMonAt(falling.cx, falling.cy, 0.92, 1, 1, falling.shiny ? 'shiny' : 'normal');
   }
 
   // ── Carrier (bird + pokemon) ──
@@ -639,7 +657,7 @@ function render() {
     ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(carrier.cx, birdCY + 10); ctx.lineTo(carrier.cx, CARRIER_Y - PIK_H/2); ctx.stroke();
     // Show pokemon being carried
-    drawMonAt(carrier.cx, CARRIER_Y, 1, 1, 1, currentPiece.shiny);
+    drawMonAt(carrier.cx, CARRIER_Y, 1, 1, 1, currentPiece.shiny ? 'shiny' : 'normal');
     if (currentPiece.shiny) {
       ctx.fillStyle = '#B8FF5A';
       ctx.font = 'bold 12px Courier New';
