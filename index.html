@@ -112,7 +112,7 @@
   .cry-mon::after {
     content: "";
     position: absolute;
-    top: 41px;
+    top: 43px;
     width: 8px;
     height: 24px;
     background: #78D8FF;
@@ -120,8 +120,8 @@
     border-radius: 5px 5px 9px 9px;
     animation: tearDrop 0.9s steps(2, end) infinite;
   }
-  .cry-mon::before { left: 35px; }
-  .cry-mon::after { right: 35px; animation-delay: 0.2s; }
+  .cry-mon::before { left: 38px; }
+  .cry-mon::after { right: 38px; animation-delay: 0.2s; }
   .cry-pika {
     position: relative;
     width: 96px;
@@ -341,6 +341,10 @@ function updateChoiceImages() {
     const key = img.dataset.mon;
     if (monSrcs[key]) img.src = monSrcs[key].toDataURL('image/png');
   });
+}
+
+function getTransparentMonSrc(key) {
+  return monSrcs[key] ? monSrcs[key].toDataURL('image/png') : POKEMON[key].src;
 }
 
 function drawMonAt(cx, cy, alpha=1, scaleX=1, scaleY=1, variant='normal') {
@@ -581,7 +585,7 @@ function showOver() {
   ov.style.display = 'flex';
   ov.innerHTML = `
     <div class="cry-mon" aria-hidden="true">
-      <img src="${selectedMon.src}" alt="">
+      <img src="${getTransparentMonSrc(selectedKey)}" alt="">
     </div>
     <h2>${selectedMon.overTitle}</h2>
     <p>쌓은 ${selectedMon.name}</p>
