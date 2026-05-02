@@ -309,12 +309,30 @@ function removeBg(img) {
   const ox = oc.getContext('2d');
   ox.drawImage(img, 0, 0);
   const d = ox.getImageData(0,0,oc.width,oc.height), px = d.data;
-  for (let i=0; i<px.length; i+=4) {
-    const mn = Math.min(px[i],px[i+1],px[i+2]);
-    const br = (px[i]+px[i+1]+px[i+2])/3;
-    if (mn>210 && br>220) px[i+3]=0;
-    else if (mn>180 && br>195) px[i+3]=Math.round(px[i+3]*(1-(mn-180)/50));
+  const w = oc.width, h = oc.height;
+  const seen = new Uint8Array(w*h);
+  const stack = [];
+  const isWhiteBg = idx => {
+    const p = idx * 4;
+    const mn = Math.min(px[p], px[p+1], px[p+2]);
+    const br = (px[p] + px[p+1] + px[p+2]) / 3;
+    return mn > 190 && br > 205;
+  };
+  const push = idx => {
+    if (idx < 0 || idx >= seen.length || seen[idx] || !isWhiteBg(idx)) return;
+    seen[idx] = 1; stack.push(idx);
+  };
+  for (let x=0; x<w; x++) { push(x); push((h-1)*w + x); }
+  for (let y=0; y<h; y++) { push(y*w); push(y*w + w - 1); }
+  while (stack.length) {
+    const idx = stack.pop();
+    const x = idx % w, y = Math.floor(idx / w);
+    if (x > 0) push(idx - 1);
+    if (x < w - 1) push(idx + 1);
+    if (y > 0) push(idx - w);
+    if (y < h - 1) push(idx + w);
   }
+  for (let idx=0; idx<seen.length; idx++) if (seen[idx]) px[idx*4+3]=0;
   ox.putImageData(d,0,0); return oc;
 }
 function loadMon(key) {
