@@ -579,6 +579,7 @@ function startGame() {
   document.getElementById('overlay').style.display = 'none';
   tower = []; falling = null; topple = null;
   score = 0; camY = 0;
+  scoreSaved = false;
   carrier.cx = W/2; carrier.dir = 1; carrier.speed = 3;
   document.getElementById('score').textContent = 0;
   state = 'playing';
@@ -638,10 +639,6 @@ function triggerGameOver() {
 
   state = 'toppling';
 
-  const nickname = prompt("닉네임을 입력해주세요");
-  if (nickname) {
-    saveScore(nickname, score);
-  }
 
   const com = getCOM();
   const dir = com > BASE_CX ? 1 : -1;
@@ -651,6 +648,10 @@ function triggerGameOver() {
 
 function showOver() {
   state = 'over';
+  const nickname = prompt("닉네임을 입력해주세요");
+if (nickname) {
+  saveScore(nickname.trim(), score);
+}
   playOverSound();
   if (score > best) { best = score; localStorage.setItem(selectedMon.bestKey, best); document.getElementById('best').textContent = best; }
   const ov = document.getElementById('overlay');
