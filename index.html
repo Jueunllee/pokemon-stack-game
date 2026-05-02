@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포켓몬 쌓기</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #1a0030;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    user-select: none;
+  }
+  #title {
+    color: #FFD700;
+    font-size: 20px;
+    letter-spacing: 5px;
+    text-shadow: 3px 3px 0 #8B4513;
+    margin-bottom: 10px;
+    font-weight: bold;
+  }
+  #ui { display: flex; gap: 24px; margin-bottom: 10px; }
+  .pixel-box {
+    background: #0a0018;
+    border: 3px solid #FFD700;
+    box-shadow: 3px 3px 0 #8B4513;
+    padding: 5px 18px;
+    color: #FFD700;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    min-width: 90px;
+  }
+  .pixel-box span { color: #fff; font-size: 22px; display: block; font-weight: bold; margin-top: 2px; }
+  #canvas-wrap {
+    position: relative;
+    border: 4px solid #FFD700;
+    box-shadow: 6px 6px 0 #8B4513, 0 0 40px rgba(255,215,0,0.15);
+    line-height: 0;
+  }
+  canvas { display: block; image-rendering: pixelated; cursor: pointer; }
+  #overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(5,0,20,0.88);
+    color: #FFD700;
+    font-family: 'Courier New', monospace;
+    gap: 10px;
+  }
+  #overlay h2 { font-size: 26px; letter-spacing: 3px; text-shadow: 3px 3px 0 #8B4513; line-height: 1.2; text-align: center; margin: 0; }
+  #overlay p { font-size: 12px; color: #aaa; letter-spacing: 2px; line-height: 1.2; text-align: center; margin: 0; }
+  .score-big { font-size: 36px; color: #fff; font-weight: bold; letter-spacing: 2px; line-height: 1.2; text-align: center; margin: 0; }
+  .new-record { color: #FFD700; font-size: 13px; letter-spacing: 3px; line-height: 1.2; text-align: center; margin: 0; animation: blink 0.8s step-end infinite; }
+  .choose-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 112px);
+    gap: 12px;
+    margin: 8px 0 4px;
+  }
+  .mon-card {
+    background: #0a0018;
+    border: 3px solid #FFD700;
+    box-shadow: 4px 4px 0 #8B4513;
+    color: #FFD700;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .mon-card:hover {
+    background: #201040;
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 #8B4513;
+  }
+  .mon-card img {
+    display: block;
+    width: 68px;
+    height: 68px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    margin: 0 auto 8px;
+  }
+  .cry-mon {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin-bottom: 2px;
+  }
+  .cry-mon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.35));
+  }
+  .cry-mon::before,
+  .cry-mon::after {
+    content: "";
+    position: absolute;
+    top: 41px;
+    width: 8px;
+    height: 24px;
+    background: #78D8FF;
+    border: 2px solid #202020;
+    border-radius: 5px 5px 9px 9px;
+    animation: tearDrop 0.9s steps(2, end) infinite;
+  }
+  .cry-mon::before { left: 35px; }
+  .cry-mon::after { right: 35px; animation-delay: 0.2s; }
+  .cry-pika {
+    position: relative;
+    width: 96px;
+    height: 82px;
+    margin-bottom: 4px;
+    image-rendering: pixelated;
+  }
+  .cry-pika .ear {
+    position: absolute;
+    top: 0;
+    width: 24px;
+    height: 54px;
+    background: #FFD700;
+    border: 4px solid #202020;
+    border-bottom: 0;
+    transform-origin: bottom center;
+    box-shadow: inset 0 12px 0 #202020;
+  }
+  .cry-pika .ear.left { left: 13px; transform: rotate(-30deg); }
+  .cry-pika .ear.right { right: 13px; transform: rotate(30deg); }
+  .cry-pika .face {
+    position: absolute;
+    left: 10px;
+    bottom: 0;
+    width: 76px;
+    height: 58px;
+    background: #FFD700;
+    border: 4px solid #202020;
+    border-radius: 28px 28px 24px 24px;
+    box-shadow: inset -8px -6px 0 #F0C000, 4px 4px 0 rgba(0,0,0,0.25);
+  }
+  .cry-pika .eye {
+    position: absolute;
+    top: 21px;
+    width: 9px;
+    height: 13px;
+    background: #202020;
+    border-radius: 50%;
+  }
+  .cry-pika .eye.left { left: 22px; }
+  .cry-pika .eye.right { right: 22px; }
+  .cry-pika .cheek {
+    position: absolute;
+    top: 34px;
+    width: 13px;
+    height: 13px;
+    background: #F04A4A;
+    border: 3px solid #202020;
+    border-radius: 50%;
+  }
+  .cry-pika .cheek.left { left: 7px; }
+  .cry-pika .cheek.right { right: 7px; }
+  .cry-pika .mouth {
+    position: absolute;
+    left: 35px;
+    top: 39px;
+    width: 10px;
+    height: 8px;
+    border-bottom: 4px solid #202020;
+    border-radius: 0 0 12px 12px;
+  }
+  .cry-pika .tear {
+    position: absolute;
+    top: 31px;
+    width: 7px;
+    height: 20px;
+    background: #78D8FF;
+    border: 2px solid #202020;
+    border-radius: 4px 4px 8px 8px;
+    animation: tearDrop 0.9s steps(2, end) infinite;
+  }
+  .cry-pika .tear.left { left: 24px; }
+  .cry-pika .tear.right { right: 24px; animation-delay: 0.2s; }
+  @keyframes tearDrop { 50% { transform: translateY(5px); } }
+  @keyframes blink { 50% { opacity: 0; } }
+  #btn, .pixel-btn {
+    background: #FFD700; color: #1a0030; border: none;
+    padding: 10px 30px; font-family: 'Courier New', monospace;
+    font-size: 14px; letter-spacing: 3px; cursor: pointer;
+    box-shadow: 3px 3px 0 #8B4513; font-weight: bold; margin-top: 6px;
+  }
+  #btn:hover, .pixel-btn:hover { background: #fff; transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #8B4513; }
+  #btn:active, .pixel-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #8B4513; }
+  #hint { margin-top: 8px; color: #444; font-size: 10px; letter-spacing: 3px; }
+</style>
+</head>
+<body>
+<div id="title">★ 포켓몬 쌓기 ★</div>
+<div id="ui">
+  <div class="pixel-box">쌓은 수<span id="score">0</span></div>
+  <div class="pixel-box">최고기록<span id="best">0</span></div>
+</div>
+<div id="canvas-wrap">
+  <canvas id="c" width="360" height="560"></canvas>
+  <div id="overlay">
+    <h2>누굴 쌓을까?</h2>
+    <p>쌓을 포켓몬을 선택해요</p>
+    <div class="choose-grid">
+      <button class="mon-card" onclick="choosePokemon('pikachu')">
+        <img src="pikachu.png" alt="피카츄">
+        피카츄
+      </button>
+      <button class="mon-card" onclick="choosePokemon('wooper')">
+        <img src="wooper.jpg" alt="우파">
+        우파
+      </button>
+      <button class="mon-card" onclick="choosePokemon('eevee')">
+        <img src="eevee.jpg" alt="이브이">
+        이브이
+      </button>
+      <button class="mon-card" onclick="choosePokemon('doduo')">
+        <img src="doduo.webp" alt="두두">
+        두두
+      </button>
+    </div>
+  </div>
+</div>
+<div id="hint">CLICK / SPACE to drop</div>
+
+<script>
+// ── CANVAS SETUP ─────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const W = canvas.width, H = canvas.height;
+
+// ── PIKACHU IMAGE ────────────────────────────────────────────────
+const PIK_W = 80, PIK_H = 80;
+
+// Pixel-art fallback sprite (18×22 → scaled to PIK_W×PIK_H)
+const PAL = { '_':null,'Y':'#FFDF00','y':'#F0C000','D':'#C89000','B':'#202020','R':'#E83040','W':'#FFFFFF','T':'#806000' };
+const SPR = [
+  ['_','_','_','B','T','_','_','_','_','_','_','_','B','T','_','_','_','_'],
+  ['_','_','B','T','Y','B','_','_','_','_','_','B','T','Y','B','_','_','_'],
+  ['_','_','B','Y','Y','B','_','_','_','_','_','B','Y','Y','B','_','_','_'],
+  ['_','_','B','Y','Y','B','_','_','_','_','_','B','Y','Y','B','_','_','_'],
+  ['_','B','Y','Y','Y','Y','B','B','B','B','B','Y','Y','Y','Y','B','_','_'],
+  ['_','B','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','B','_','_'],
+  ['_','B','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','B','_','_'],
+  ['_','B','Y','B','B','Y','Y','Y','Y','Y','Y','Y','B','B','Y','B','_','_'],
+  ['_','B','Y','B','W','B','Y','Y','Y','Y','Y','B','W','B','Y','B','_','_'],
+  ['_','B','Y','B','B','Y','Y','Y','B','Y','Y','Y','B','B','Y','B','_','_'],
+  ['_','B','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','B','_','_'],
+  ['_','B','R','R','Y','Y','Y','Y','Y','Y','Y','Y','Y','R','R','B','_','_'],
+  ['_','B','Y','Y','Y','B','Y','Y','Y','Y','B','Y','Y','Y','Y','B','_','_'],
+  ['_','B','Y','Y','Y','Y','B','B','B','B','Y','Y','Y','Y','Y','B','_','_'],
+  ['_','_','B','Y','Y','Y','Y','y','y','y','Y','Y','Y','Y','B','_','_','_'],
+  ['_','_','B','Y','y','D','D','D','D','D','D','D','y','Y','B','_','_','_'],
+  ['_','B','Y','y','D','D','D','D','D','D','D','D','D','y','Y','B','_','_'],
+  ['_','B','Y','Y','y','D','D','D','D','D','D','D','y','Y','Y','B','_','_'],
+  ['_','B','Y','B','B','Y','Y','Y','Y','Y','Y','Y','B','B','Y','B','_','_'],
+  ['_','B','Y','B','Y','Y','B','Y','Y','Y','B','Y','Y','B','Y','B','_','_'],
+  ['B','Y','Y','B','_','B','Y','B','_','B','Y','B','_','B','Y','Y','B','_'],
+  ['B','B','B','_','_','B','B','_','_','_','B','B','_','_','B','B','B','_'],
+];
+const SCOLS = 18, SROWS = 22;
+
+const offPika = document.createElement('canvas');
+offPika.width = SCOLS; offPika.height = SROWS;
+const offCtx = offPika.getContext('2d');
+for (let r=0;r<SROWS;r++) for (let c=0;c<SCOLS;c++) {
+  const col = PAL[SPR[r][c]]; if(!col) continue;
+  offCtx.fillStyle=col; offCtx.fillRect(c,r,1,1);
+}
+
+// Load pokemon images with white-bg removal
+const POKEMON = {
+  pikachu: { name: '피카츄', title: '피카츄 쌓기', src: 'pikachu.png', suffix: '카츄', bestKey: 'pb2', overTitle: '무너졌츄!', retryText: '다시하겠츄!', stackGap: 80 },
+  wooper:  { name: '우파', title: '우파 쌓기', src: 'wooper.jpg', suffix: '우파', bestKey: 'wooperBest', overTitle: '무너졌파 ㅠ.ㅠ', retryText: '다시하겠파!', stackGap: 42 },
+  eevee:   { name: '이브이', title: '이브이 쌓기', src: 'eevee.jpg', suffix: '브이', bestKey: 'eeveeBest', overTitle: '개못한다브이ㅠ.ㅠ', retryText: '다시해브이!', stackGap: 50 },
+  doduo:   { name: '두두', title: '두두 쌓기', src: 'doduo.webp', shinySrc: 'doduo-shiny.webp', suffix: '두두', bestKey: 'doduoBest', overTitle: '무너졌두 ㅠ.ㅠ', retryText: '다시하겠두!', stackGap: 46, shinyChance: 0.18, shinyValue: 5, shinySpeed: 1.8 },
+};
+let selectedKey = 'pikachu';
+let selectedMon = POKEMON[selectedKey];
+let monSrcs = {};
+function removeBg(img) {
+  const oc = document.createElement('canvas');
+  oc.width = img.naturalWidth; oc.height = img.naturalHeight;
+  const ox = oc.getContext('2d');
+  ox.drawImage(img, 0, 0);
+  const d = ox.getImageData(0,0,oc.width,oc.height), px = d.data;
+  for (let i=0; i<px.length; i+=4) {
+    const mn = Math.min(px[i],px[i+1],px[i+2]);
+    const br = (px[i]+px[i+1]+px[i+2])/3;
+    if (mn>210 && br>220) px[i+3]=0;
+    else if (mn>180 && br>195) px[i+3]=Math.round(px[i+3]*(1-(mn-180)/50));
+  }
+  ox.putImageData(d,0,0); return oc;
+}
+function loadMon(key) {
+  const rawImg = new Image();
+  rawImg.onload = () => { monSrcs[key] = removeBg(rawImg); };
+  rawImg.onerror = () => {};
+  rawImg.src = POKEMON[key].src;
+
+  if (POKEMON[key].shinySrc) {
+    const shinyImg = new Image();
+    shinyImg.onload = () => { monSrcs[`${key}:shiny`] = removeBg(shinyImg); };
+    shinyImg.onerror = () => {};
+    shinyImg.src = POKEMON[key].shinySrc;
+  }
+}
+Object.keys(POKEMON).forEach(loadMon);
+
+function drawMonAt(cx, cy, alpha=1, scaleX=1, scaleY=1, shiny=false) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(cx, cy);
+  ctx.scale(scaleX, scaleY);
+  const x = -PIK_W/2, y = -PIK_H/2;
+  const selectedSrc = shiny ? (monSrcs[`${selectedKey}:shiny`] || monSrcs[selectedKey]) : monSrcs[selectedKey];
+  if (selectedSrc) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(selectedSrc, x, y, PIK_W, PIK_H);
+  } else {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(offPika, x, y, PIK_W, PIK_H);
+  }
+  ctx.restore();
+}
+
+// ── GAME STATE ───────────────────────────────────────────────────
+const GROUND_Y   = H - 24;          // canvas Y of ground line
+const BASE_CX    = W / 2;           // center of base platform
+const CARRIER_Y  = 70;              // canvas Y of the carrier pikachu's center (room for bird above)
+const MAX_OFFSET = PIK_W * 1.0;    // COM offset that triggers game over
+const MIN_OVERLAP = PIK_W * 0.25;  // minimum horizontal overlap with block below (25%)
+const PLATFORM_W = PIK_W * 1.6;
+
+let state = 'idle';
+let tower  = [];           // [{cx}] settled blocks; index 0 = bottom
+let falling = null;        // {cx, cy, vy} – block currently dropping
+let carrier = { cx: W/4, dir: 1, speed: 3 };
+let currentPiece = { shiny: false, value: 1, speedBoost: 1 };
+let camY   = 0;
+let score  = 0;
+let best   = +localStorage.getItem(selectedMon.bestKey)||0;
+document.getElementById('best').textContent = best;
+
+// game-over topple state
+let topple = null; // {angle, angleV, pivotX, pivotY}
+
+let raf, lastTs = 0;
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function blockCY(i) {
+  // camY increases as camera moves up → blocks/ground shift downward (off-screen bottom)
+  return GROUND_Y - PIK_H/2 - i*selectedMon.stackGap + camY;
+}
+
+function getCOM() {
+  if (!tower.length) return BASE_CX;
+  return tower.reduce((s,b)=>s+b.cx,0) / tower.length;
+}
+
+function getInstability() {
+  if (tower.length < 2) return 0;
+  const off = Math.abs(getCOM() - BASE_CX);
+  return Math.min(off / MAX_OFFSET, 1);
+}
+
+// ── GAME CONTROL ─────────────────────────────────────────────────
+function prepareNextPiece() {
+  const isShiny = !!selectedMon.shinySrc && Math.random() < (selectedMon.shinyChance || 0);
+  currentPiece = {
+    shiny: isShiny,
+    value: isShiny ? (selectedMon.shinyValue || 5) : 1,
+    speedBoost: isShiny ? (selectedMon.shinySpeed || 1.7) : 1,
+  };
+}
+
+function syncPokemonLabels() {
+  selectedMon = POKEMON[selectedKey];
+  best = +localStorage.getItem(selectedMon.bestKey)||0;
+  document.title = selectedMon.title;
+  document.getElementById('title').textContent = `★ ${selectedMon.title} ★`;
+  document.getElementById('best').textContent = best;
+}
+
+function choosePokemon(key) {
+  selectedKey = key;
+  syncPokemonLabels();
+  prepareNextPiece();
+  showReady();
+}
+
+function showSelect() {
+  state = 'idle';
+  cancelAnimationFrame(raf);
+  document.getElementById('score').textContent = 0;
+  syncPokemonLabels();
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  ov.innerHTML = `
+    <h2>누굴 쌓을까?</h2>
+    <p>쌓을 포켓몬을 선택해요</p>
+    <div class="choose-grid">
+      <button class="mon-card" onclick="choosePokemon('pikachu')">
+        <img src="pikachu.png" alt="피카츄">
+        피카츄
+      </button>
+      <button class="mon-card" onclick="choosePokemon('wooper')">
+        <img src="wooper.jpg" alt="우파">
+        우파
+      </button>
+      <button class="mon-card" onclick="choosePokemon('eevee')">
+        <img src="eevee.jpg" alt="이브이">
+        이브이
+      </button>
+      <button class="mon-card" onclick="choosePokemon('doduo')">
+        <img src="doduo.webp" alt="두두">
+        두두
+      </button>
+    </div>
+  `;
+}
+
+function showReady() {
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  ov.innerHTML = `
+    <h2>${selectedMon.title}!</h2>
+    <p>클릭해서 ${selectedMon.name}를 떨어뜨려요</p>
+    <p>균형을 잘 맞춰 높이 쌓아보세요!</p>
+    <button class="pixel-btn" onclick="startGame()">▶ 시작하기</button>
+    <button class="pixel-btn" onclick="showSelect()">↩ 다시 고르기</button>
+  `;
+}
+
+function startGame() {
+  syncPokemonLabels();
+  prepareNextPiece();
+  document.getElementById('overlay').style.display = 'none';
+  tower = []; falling = null; topple = null;
+  score = 0; camY = 0;
+  carrier.cx = W/2; carrier.dir = 1; carrier.speed = 3;
+  document.getElementById('score').textContent = 0;
+  state = 'playing';
+  cancelAnimationFrame(raf);
+  lastTs = performance.now();
+  loop(lastTs);
+}
+
+function drop() {
+  if (state !== 'playing' || falling) return;
+  falling = { cx: carrier.cx, cy: CARRIER_Y, vy: 0, shiny: currentPiece.shiny, value: currentPiece.value };
+}
+
+function overlapWith(cx1, cx2) {
+  return Math.min(cx1 + PIK_W/2, cx2 + PIK_W/2) - Math.max(cx1 - PIK_W/2, cx2 - PIK_W/2);
+}
+
+function landBlock() {
+  const newCx = falling.cx;
+  const landedPiece = falling;
+  tower.push({ cx: newCx, shiny: landedPiece.shiny });
+  falling = null;
+
+  // ── 직전 블록과 겹침 체크 ──────────────────────────────
+  if (tower.length === 1) {
+    // 첫 번째 포켓몬은 기반 플랫폼과 겹쳐야 함
+    const overlap = overlapWith(newCx, BASE_CX);
+    if (overlap < MIN_OVERLAP) { triggerGameOver(); return; }
+  } else {
+    // 직전 포켓몬와 겹쳐야 함
+    const belowCx = tower[tower.length - 2].cx;
+    const overlap = overlapWith(newCx, belowCx);
+    if (overlap < MIN_OVERLAP) { triggerGameOver(); return; }
+  }
+
+  score += landedPiece.value;
+  document.getElementById('score').textContent = score;
+
+  // ── 카메라 스크롤 ──────────────────────────────────────
+  const topCY = blockCY(tower.length - 1);
+  const desired = H * 0.35;
+  if (topCY < desired) camY -= topCY - desired;
+
+  carrier.speed = Math.min(3 + score * 0.22, 10);
+  prepareNextPiece();
+
+  // ── 전체 COM 안정성 체크 ───────────────────────────────
+  if (getInstability() >= 1) triggerGameOver();
+}
+
+function triggerGameOver() {
+  state = 'toppling';
+  const com = getCOM();
+  const dir = com > BASE_CX ? 1 : -1;
+  topple = { angle: 0, angleV: dir * 0.015, pivotX: BASE_CX, pivotY: GROUND_Y + camY };
+  setTimeout(showOver, 1600);
+}
+
+function showOver() {
+  state = 'over';
+  if (score > best) { best = score; localStorage.setItem(selectedMon.bestKey, best); document.getElementById('best').textContent = best; }
+  const ov = document.getElementById('overlay');
+  ov.style.display = 'flex';
+  ov.innerHTML = `
+    <div class="cry-mon" aria-hidden="true">
+      <img src="${selectedMon.src}" alt="">
+    </div>
+    <h2>${selectedMon.overTitle}</h2>
+    <p>쌓은 ${selectedMon.name}</p>
+    <div class="score-big">${score} ${selectedMon.suffix}</div>
+    ${score >= best && score > 0 ? '<div class="new-record">★ 최고기록! ★</div>' : ''}
+    <button class="pixel-btn" onclick="startGame()">▶ ${selectedMon.retryText}</button>
+    <button class="pixel-btn" onclick="showSelect()">↩ 포켓몬 바꾸기</button>
+  `;
+}
+
+// ── GAME LOOP ────────────────────────────────────────────────────
+function loop(ts) {
+  const dt = Math.min(ts - lastTs, 50); lastTs = ts;
+  update(dt);
+  render();
+  raf = requestAnimationFrame(loop);
+}
+
+function update(dt) {
+  const T = dt / 16;
+
+  if (state === 'playing') {
+    // carrier oscillates
+    carrier.cx += carrier.dir * carrier.speed * currentPiece.speedBoost * T;
+    if (carrier.cx > W - PIK_W*0.3) { carrier.cx = W - PIK_W*0.3; carrier.dir = -1; }
+    if (carrier.cx < PIK_W*0.3)    { carrier.cx = PIK_W*0.3;      carrier.dir =  1; }
+
+    // falling block
+    if (falling) {
+      falling.vy += 0.55 * T;
+      falling.cy += falling.vy * T;
+      const targetCY = blockCY(tower.length);
+      if (falling.cy >= targetCY) {
+        falling.cy = targetCY;
+        landBlock();
+      }
+    }
+  }
+
+  if (state === 'toppling' && topple) {
+    topple.angleV *= 1.05;
+    topple.angle += topple.angleV * T;
+    if (Math.abs(topple.angle) > Math.PI / 2.5) {
+      // stay at max
+    }
+  }
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+const STARS = Array.from({length:24}, ()=>[Math.random()*W, Math.random()*H]);
+
+function render() {
+  // BG
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#07001a'); g.addColorStop(1,'#1a0035');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  // stars
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  for (const [sx,sy] of STARS) {
+    const ay = ((sy + camY*0.04) % H + H) % H;
+    ctx.fillRect(sx, ay, 2, 2);
+  }
+
+  // Ground — moves DOWN as camera goes up (camY grows → gY grows → off-screen bottom)
+  const gY = GROUND_Y + camY;
+  if (gY < H + 20) { // only draw if ground is still visible
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(0, gY, W, H - gY + 60);
+    ctx.fillStyle = '#A0522D'; ctx.fillRect(0, gY, W, 6);
+    ctx.fillStyle = '#FFD700'; ctx.fillRect(0, gY, W, 3);
+    // Base platform
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(BASE_CX - PLATFORM_W/2, gY, PLATFORM_W, 8);
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(BASE_CX - PLATFORM_W/2, gY+5, PLATFORM_W, 3);
+  }
+
+  // ── Tower (with topple rotation) ──
+  const isToppling = state === 'toppling' && topple;
+  if (isToppling) {
+    ctx.save();
+    ctx.translate(topple.pivotX, topple.pivotY);
+    ctx.rotate(topple.angle);
+    ctx.translate(-topple.pivotX, -topple.pivotY);
+  }
+
+  for (let i = 0; i < tower.length; i++) {
+    const b = tower[i];
+    const cy = blockCY(i);
+    if (cy > H + PIK_H || cy < -PIK_H*2) continue;
+    const alpha = isToppling ? Math.max(0, 1 - Math.abs(topple.angle)*2) : 1;
+    drawMonAt(b.cx, cy, alpha, 1, 1, b.shiny);
+  }
+
+  if (isToppling) ctx.restore();
+
+  // Falling pokemon
+  if (falling) {
+    drawMonAt(falling.cx, falling.cy, 0.92, 1, 1, falling.shiny);
+  }
+
+  // ── Carrier (bird + pokemon) ──
+  if (state === 'playing') {
+    // Bird sits above the pikachu: CARRIER_Y is pokemon center, bird above
+    const birdCY = CARRIER_Y - PIK_H/2 - 16;
+    drawCarrier(carrier.cx, birdCY);
+    // String from bird to pokemon
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(carrier.cx, birdCY + 10); ctx.lineTo(carrier.cx, CARRIER_Y - PIK_H/2); ctx.stroke();
+    // Show pokemon being carried
+    drawMonAt(carrier.cx, CARRIER_Y, 1, 1, 1, currentPiece.shiny);
+    if (currentPiece.shiny) {
+      ctx.fillStyle = '#B8FF5A';
+      ctx.font = 'bold 12px Courier New';
+      ctx.textAlign = 'center';
+      ctx.fillText('+5', carrier.cx, CARRIER_Y - PIK_H/2 - 8);
+    }
+    // Drop guide line
+    const topCY = blockCY(tower.length);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,215,0,0.15)';
+    ctx.setLineDash([4,6]); ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(carrier.cx, CARRIER_Y + PIK_H/2);
+    ctx.lineTo(carrier.cx, topCY - PIK_H/2);
+    ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  }
+
+  // ── Stability / Height bar ──
+  drawBars();
+
+  // ── COM indicator (subtle) ──
+  if (state === 'playing' && tower.length >= 2) {
+    const com = getCOM();
+    const inst = getInstability();
+    const barColor = inst > 0.7 ? '#FF3333' : inst > 0.4 ? '#FF8C00' : '#00FF88';
+    ctx.fillStyle = barColor;
+    ctx.globalAlpha = 0.7;
+    ctx.fillRect(com - 4, blockCY(tower.length - 1) - PIK_H/2 - 12, 8, 8);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawCarrier(cx, cy) {
+  // Simple bird silhouette
+  ctx.save();
+  ctx.fillStyle = '#e8e8f0';
+  // body
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, 18, 9, carrier.dir > 0 ? -0.2 : 0.2, 0, Math.PI*2);
+  ctx.fill();
+  // wing flap (oscillate)
+  const flap = Math.sin(Date.now()/120) * 6;
+  ctx.beginPath();
+  ctx.moveTo(cx - 4, cy - 2);
+  ctx.quadraticCurveTo(cx - 16, cy - 14 + flap, cx - 28, cy - 6 + flap);
+  ctx.quadraticCurveTo(cx - 16, cy, cx - 4, cy - 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + 4, cy - 2);
+  ctx.quadraticCurveTo(cx + 16, cy - 14 + flap, cx + 28, cy - 6 + flap);
+  ctx.quadraticCurveTo(cx + 16, cy, cx + 4, cy - 2);
+  ctx.fill();
+  // beak
+  ctx.fillStyle = '#FFB800';
+  ctx.beginPath();
+  ctx.moveTo(cx + (carrier.dir > 0 ? 18 : -18), cy);
+  ctx.lineTo(cx + (carrier.dir > 0 ? 26 : -26), cy+2);
+  ctx.lineTo(cx + (carrier.dir > 0 ? 18 : -18), cy+4);
+  ctx.fill();
+  // eye
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.arc(cx + (carrier.dir > 0 ? 10 : -10), cy-2, 2.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBars() {
+  // Right side: balance meter
+  const bx = W - 18, by = 30, bh = H - 60;
+  ctx.fillStyle = '#0a0018';
+  ctx.fillRect(bx, by, 12, bh);
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth=2;
+  ctx.strokeRect(bx, by, 12, bh);
+
+  // Instability fill (bottom up, red=bad)
+  const inst = (state==='playing'||state==='toppling') ? getInstability() : 0;
+  const heightPct = tower.length ? Math.min(tower.length/20, 1) : 0;
+  // height (gold)
+  const fh = bh * heightPct;
+  const instColor = inst > 0.7 ? `rgb(255,${Math.round(80-80*inst)},0)` : inst > 0.4 ? '#FF8C00' : '#FFD700';
+  ctx.fillStyle = instColor;
+  ctx.fillRect(bx+2, by+bh-fh, 8, fh);
+
+  // Instability overlay (red flash when dangerous)
+  if (inst > 0.6) {
+    ctx.fillStyle = `rgba(255,0,0,${(inst-0.6)*1.5*Math.abs(Math.sin(Date.now()/150))})`;
+    ctx.fillRect(bx+2, by+bh-fh, 8, fh);
+  }
+
+  ctx.fillStyle = '#FFD700'; ctx.font='7px Courier New'; ctx.textAlign='center';
+  ctx.fillText('↑', bx+6, by-4);
+
+  // Left side: balance indicator (horizontal arrow showing COM lean)
+  if ((state==='playing'||state==='toppling') && tower.length >= 2) {
+    const com = getCOM();
+    const off = com - BASE_CX;
+    const pct = off / MAX_OFFSET; // -1 to 1
+    const barW = 60, barH = 10;
+    const bLeft = 14, bTop = H - 44;
+    ctx.fillStyle = '#0a0018';
+    ctx.fillRect(bLeft, bTop, barW, barH);
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth=1.5;
+    ctx.strokeRect(bLeft, bTop, barW, barH);
+    // center line
+    ctx.fillStyle = '#FFD700'; ctx.fillRect(bLeft+barW/2-1, bTop, 2, barH);
+    // needle
+    const needleX = bLeft + barW/2 + pct*(barW/2);
+    const needleColor = Math.abs(pct) > 0.7 ? '#FF3333' : Math.abs(pct) > 0.4 ? '#FF8C00' : '#00FF88';
+    ctx.fillStyle = needleColor;
+    ctx.fillRect(Math.max(bLeft+1, Math.min(bLeft+barW-7, needleX-3)), bTop+1, 6, barH-2);
+
+    ctx.fillStyle = '#888'; ctx.font='7px Courier New'; ctx.textAlign='left';
+    ctx.fillText('균형', bLeft, bTop-3);
+  }
+}
+
+// ── INPUT ────────────────────────────────────────────────────────
+canvas.addEventListener('click', () => { if (state==='playing') drop(); });
+canvas.addEventListener('touchstart', e => { e.preventDefault(); if(state==='playing') drop(); }, {passive:false});
+document.addEventListener('keydown', e => { if(e.code==='Space'){e.preventDefault(); if(state==='playing') drop();} });
+
+// boot render
+(function boot() { raf = requestAnimationFrame(function tick(ts){ lastTs=ts; render(); raf=requestAnimationFrame(tick); }); })();
+</script>
+</body>
+</html>
